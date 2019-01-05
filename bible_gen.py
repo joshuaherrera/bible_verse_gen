@@ -40,15 +40,21 @@ def set_lang(languages):
 
 
 def query_bible_vers(url, headers, lang):
+    # queries api to get json data for a language
     parameters = {'language': lang}
     res = requests.get(url, headers=headers, params=parameters)
     return res.json()['data']
 
 
 def get_bible_vers(data):
+    # uses data (type list) to get the name, abbreviation, and unique
+    # id's of the available bible translations for a chosen language.
+    # returns a dict with the name as the key, and a list, containing
+    # the abbreviation and unique id, as the corresponding value.
     pass
 
-def bible_gen():
+
+def bible_verse_gen():
     # Note, this url will return all bible translations available
     url = "https://api.scripture.api.bible/v1/bibles"
     headers = {'api-key': credentials['key']}
@@ -63,9 +69,8 @@ def bible_gen():
     # print(res.json())
 
 
-
 def main():
-    bible_gen()
+    bible_verse_gen()
 
 
 if __name__ == '__main__':
