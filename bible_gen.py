@@ -39,10 +39,13 @@ def set_lang(languages):
             print("Invalid selection.")
 
 
-def query_bible_vers(url, headers, lang):
-    # queries api to get json data for a language
-    parameters = {'language': lang}
-    res = requests.get(url, headers=headers, params=parameters)
+def query_bible_api(url, headers, parameters=None):
+    # queries api to get json data. expects a dictionary as the
+    # parameters. if none supplied, just return all bibles.
+    if parameters:
+        res = requests.get(url, headers=headers, params=parameters)
+    else:
+        res = requests.get(url, headers=headers)
     return res.json()['data']
 
 
@@ -58,12 +61,15 @@ def bible_verse_gen():
     # Note, this url will return all bible translations available
     url = "https://api.scripture.api.bible/v1/bibles"
     headers = {'api-key': credentials['key']}
-    res = requests.get(url, headers=headers)
-    res_data = res.json()['data']
+    # res = requests.get(url, headers=headers)
+    res_data = query_bible_api(url, headers)
     languages = get_langs(res_data)
     display_langs(languages)
     chosen_lang = set_lang(languages)
     print(chosen_lang)
+    parameters = {'language': chosen_lang}
+    res_data = query_bible_api(url, headers, parameters)
+    print(res_data)
     # parameters = {'language': chosen_lang}
     # res = requests.get(url, headers=headers, params=parameters)
     # print(res.json())
