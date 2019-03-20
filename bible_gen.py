@@ -7,10 +7,25 @@ import requests
 from config import credentials
 
 
+def query_bible_api(url, headers, parameters=None):
+    '''
+    Queries api to get json data. expects a dictionary as the
+    parameters. if none supplied, just return all bibles.
+    '''
+    if parameters:
+        res = requests.get(url, headers=headers, params=parameters)
+    else:
+        res = requests.get(url, headers=headers)
+    return res.json()['data']
+
+
 def get_langs(data):
-    # uses initial query to store available languages in a dict
-    # checks if a key exists, if so skips that iteration to store
-    # only unique keys and values.
+    '''
+    Takes as input a dictionary of data from the API. Builds up a dictionary
+    of the available languages from the returned query. Ensures duplicate
+    languages are not stored in the dictionary by checking if an input is
+    already in the data structure.
+    '''
     languages = {}
     for i in data:
         iso639_lang = i['language']['id']
@@ -21,13 +36,21 @@ def get_langs(data):
 
 
 def display_langs(languages):
-    # displays available languages
+    '''
+    Displays the available languages to choose from. Receives as input a
+    dictionary of available languages. Returns nothing.
+    '''
     for i, j in languages.items():
         print(j, i.capitalize())
 
 
 def set_lang(languages):
-    # queries the user for a language selection and returns it.
+    '''
+    Queries user for language input to query the API. Detects if ISO639
+    abbreviation is given or a full language name is given.
+    Exptects as input a dictionary containing the available languages to
+    choose from. Returns a string containing the selected language.
+    '''
     while True:
         lang_selection = input("Select a language using the ISO639 code or full language name: ")
         lang_selection = lang_selection.lower()
@@ -40,21 +63,13 @@ def set_lang(languages):
             print("Invalid selection.")
 
 
-def query_bible_api(url, headers, parameters=None):
-    # queries api to get json data. expects a dictionary as the
-    # parameters. if none supplied, just return all bibles.
-    if parameters:
-        res = requests.get(url, headers=headers, params=parameters)
-    else:
-        res = requests.get(url, headers=headers)
-    return res.json()['data']
-
-
 def get_bible_version(data):
-    # uses data (type list) to get the name, abbreviation, and unique
-    # id's of the available bible translations for a chosen language.
-    # returns a dict with the name as the key, and a list, containing
-    # the abbreviation and unique id, as the corresponding value.
+    '''
+    uses data (type list) to get the name, abbreviation, and unique
+    id's of the available bible translations for a chosen language.
+    returns a dict with the name as the key, and a list, containing
+    the abbreviation and unique id, as the corresponding value.
+    '''
     versions = {}
     for i in data:
         vers_id = i['id']
@@ -67,33 +82,42 @@ def get_bible_version(data):
 
 
 def get_random_verse():
-    # test with one verse
-    verses = ["GEN.1.1"]
+    '''
+    This function returns a random verse ID from a list of preselected verses.
+    Returns a string containing the verse ID.
+    '''
+    verses = ['GEN.1.1', 'JAS.1.17', 'ROM.8.28']
+    # verses = ['JAS.1.17', 'ROM.8.28']
     return(random.choice(verses))
 
 
 def build_params():
     '''
     This function builds the parameters requests will use to query the
-    API. Returns a dictionary with the parameters for generating a verse.
-    Generated from https://scripture.api.bible/livedocs
+    API for a verse. Returns a dictionary with the parameters for generating
+    a verse. Generated from https://scripture.api.bible/livedocs
     '''
-    parameters = {'content-type': 'json',
+    parameters = {'content-type': 'text',
                   'include-notes': 'false', 'include-titles': 'true',
-                  'include-chapter-numbers': 'true',
-                  'include-verse-numbers': 'true',
+                  'include-chapter-numbers': 'false',
+                  'include-verse-numbers': 'false',
                   'include-verse-spans': 'false'}
     return parameters
 
 
-# TODO: set bible version
-#       decide whether to do completely random verse selection
-#       or to use predetermined verses.
-#       In either case, need to see how one can do it in diff
-#       languages.
+# TODO: bible selection from language.
+#       Decide whether to set language using --options.
+#       Decide whether to display available bibles or use a
+#       default for a language.
+#       Group verses by topic.
+#       Select random verse by topic.
+#       Display all verses by topic.
 
 
 def bible_verse_gen():
+    '''
+    This function will query the Bible API and print a random verse.
+    '''
     # Note, this url will return all bible translations available
     start_url = "https://api.scripture.api.bible/v1/bibles"
     headers = {'api-key': credentials['key']}
@@ -102,8 +126,9 @@ def bible_verse_gen():
     url = start_url + '/' + bible_id + '/verses/' + verse_id
     parameters = build_params()
     res_data = query_bible_api(url, headers, parameters)
+    # print(res_data)
     book_chapter = res_data['reference']
-    verse = res_data['content'][1]['items'][1]['text']
+    verse = res_data['content'].rstrip()
     print(book_chapter + '\n' + verse)
 
 
