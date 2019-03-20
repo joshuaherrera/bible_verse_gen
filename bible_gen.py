@@ -105,7 +105,8 @@ def build_params():
     return parameters
 
 
-# TODO: bible selection from language.
+# TODO: Add more verses.
+#       bible selection from language.
 #       Decide whether to set language using --options.
 #       Decide whether to display available bibles or use a
 #       default for a language.
