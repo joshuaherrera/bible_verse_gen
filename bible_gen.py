@@ -3,8 +3,34 @@
 
 
 import random
+from html.parser import HTMLParser
 import requests
 from config import credentials
+
+
+class MLStripper(HTMLParser):
+    '''
+    HTML parser child class of html parser that is used to strip html
+    content from data. Used to strip content from returned verses
+    '''
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs = True
+        self.fed = []
+
+    def handle_data(self, d):
+        self.fed.append(d)
+
+    def get_data(self):
+        return ''.join(self.fed)
+
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
 
 
 def query_bible_api(url, headers, parameters=None):
@@ -86,22 +112,35 @@ def get_random_verse():
     This function returns a random verse ID from a list of preselected verses.
     Returns a string containing the verse ID.
     '''
-    verses = ['GEN.1.1', 'JAS.1.17', 'ROM.8.28']
-    # verses = ['JAS.1.17', 'ROM.8.28']
+    verses = ['GEN.1.1', 'JAS.1.17', 'ROM.8.28', 'JER.29.11', 'JHN.3.16',
+              'EPH.6.12', 'HEB.11.6', 'JAS.1.19', 'JAS.1.22', 'JAS.3.18',
+              'JAS.5.7', 'REV.19.16', 'REV.21.4', 'REV.22.13', 'ROM.6.23',
+              'ROM.8.31', 'ROM.8.38-39', 'JHN.1.12', 'MAT.6.25', 'MAT.24.27',
+              'MAT.28.19', 'MRK.8.34', 'MRK.10.27', 'MRK.11.27', 'LUK.12.8',
+              'LUK.18.27', 'ROM.1.16', 'ROM.3.10', 'ROM.3.23', 'ROM.4.8',
+              'ROM.5.18', 'ROM.10.9', 'ROM.12.2', 'ROM.12.9', 'ROM.12.12',
+              '2CO.2.14-16', '2CO.4.18', '2CO.5.21', '2CO.10.3-6',
+              'EPH.6.11-13', 'PHP.1.21', 'PHP.4.13', 'PHP.4.19', 'COL.3.17',
+              '1TH.3.16-17', '2TH.2.15', '1TI.2.5', '2TI.2.10', '2TI.2.15',
+              '2TI.2.22', 'HEB.11.3', '2PE.3.9', '1JN.2.15-17', 'PSA.73.26',
+              'PRO.10.27', 'PRO.17.27-28', 'PRO.1.7', 'PSA.26.14', 'GEN.50.20',
+              'JOS.24.14-15', ]
+    # verses = ['ROM.8.38-39']
     return(random.choice(verses))
 
 
-def build_params():
+def build_params(verse):
     '''
     This function builds the parameters requests will use to query the
     API for a verse. Returns a dictionary with the parameters for generating
     a verse. Generated from https://scripture.api.bible/livedocs
     '''
-    parameters = {'content-type': 'text',
-                  'include-notes': 'false', 'include-titles': 'true',
-                  'include-chapter-numbers': 'false',
-                  'include-verse-numbers': 'false',
-                  'include-verse-spans': 'false'}
+    # parameters = {'content-type': 'text',
+    #               'include-notes': 'false', 'include-titles': 'true',
+    #               'include-chapter-numbers': 'false',
+    #               'include-verse-numbers': 'false',
+    #               'include-verse-spans': 'false'}
+    parameters = {'query': verse}
     return parameters
 
 
@@ -124,13 +163,17 @@ def bible_verse_gen():
     headers = {'api-key': credentials['key']}
     bible_id = 'de4e12af7f28f599-01'  # use KJV as default
     verse_id = get_random_verse()
-    url = start_url + '/' + bible_id + '/verses/' + verse_id
-    parameters = build_params()
+    # url = start_url + '/' + bible_id + '/verses/' + verse_id
+    url = start_url + '/' + bible_id + '/search'
+    parameters = build_params(verse_id)
     res_data = query_bible_api(url, headers, parameters)
     # print(res_data)
-    book_chapter = res_data['reference']
-    verse = res_data['content'].rstrip()
-    print(book_chapter + '\n' + verse)
+    book_chapter = res_data['passages'][0]['reference']
+    # book_chapter = res_data['reference']
+    # verse = res_data['content'].rstrip()
+    stripped = strip_tags(res_data['passages'][0]['content'])
+    verse = ''.join([i for i in stripped if not i.isdigit()])  # remove digits
+    print(book_chapter + '\n\t' + verse)
 
 
 def main():
