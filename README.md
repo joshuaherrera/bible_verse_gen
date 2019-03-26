@@ -5,6 +5,7 @@ Currently returns a random verse from the King James Version of the Bible.
 Uses the American Bible Society's [API.Bible](https://scripture.api.bible/).   
 
 ### Usage   
+<!-- good example of readme for options: https://raw.githubusercontent.com/Ganapati/RsaCtfTool/master/README.md -->
 ```
 usage: ./bible_gen.py
 ```
