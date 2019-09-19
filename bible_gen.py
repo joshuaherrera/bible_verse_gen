@@ -5,8 +5,10 @@
 import random
 from html.parser import HTMLParser
 import requests
+import requests_cache
 from config import credentials
 
+requests_cache.install_cache('bible_cache', backend='sqlite', expire_after=24*60*60)
 
 class MLStripper(HTMLParser):
     '''
@@ -42,6 +44,7 @@ def query_bible_api(url, headers, parameters=None):
         res = requests.get(url, headers=headers, params=parameters)
     else:
         res = requests.get(url, headers=headers)
+    # print(res.from_cache) # checks if response is from cache
     return res.json()['data']
 
 
@@ -121,7 +124,7 @@ def get_random_verse():
               'ROM.5.18', 'ROM.10.9', 'ROM.12.2', 'ROM.12.9', 'ROM.12.12',
               '2CO.2.14-16', '2CO.4.18', '2CO.5.21', '2CO.10.3-6',
               'EPH.6.11-13', 'PHP.1.21', 'PHP.4.13', 'PHP.4.19', 'COL.3.17',
-              '1TH.3.16-17', '2TH.2.15', '1TI.2.5', '2TI.2.10', '2TI.2.15',
+              '2TH.3.16', '2TH.2.15', '1TI.2.5', '2TI.2.10', '2TI.2.15',
               '2TI.2.22', 'HEB.11.3', '2PE.3.9', '1JN.2.15-17', 'PSA.73.26',
               'PRO.10.27', 'PRO.17.27-28', 'PRO.1.7', 'PRO.26.11', 'GEN.50.20',
               'JOS.24.14-15', 'ISA.40.30-31', 'MAT.9.11-12', '1CO.10.13',
@@ -141,6 +144,8 @@ def build_params(verse):
 
 
 # TODO: Find NoneType Error.
+#       cache entire bible
+#       search cached bible
 #       bible selection from language.
 #       Decide whether to set language using --options.
 #       Decide whether to display available bibles or use a
@@ -159,7 +164,8 @@ def bible_verse_gen():
     headers = {'api-key': credentials['key']}
     bible_id = 'de4e12af7f28f599-01'  # use KJV as default
     verse_id = get_random_verse()
-    print(verse_id)
+    # verse_id = 'JHN.3.16-17' # testing for cache usage
+    # print(verse_id)
     url = start_url + '/' + bible_id + '/search'
     parameters = build_params(verse_id)
     res_data = query_bible_api(url, headers, parameters)
